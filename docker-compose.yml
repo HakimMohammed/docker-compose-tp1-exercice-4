@@ -56,6 +56,15 @@ services:
       timeout: 5s
       retries: 5
 
+  # 9. Service Adminer pour l'administration DB
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
 
 # 4. Définition des volumes persistants
 volumes:
