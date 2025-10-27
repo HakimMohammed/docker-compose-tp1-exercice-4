@@ -1,0 +1,62 @@
+name: flask_postgres_redis_app
+
+services:
+  # 1. Service API Flask (web)
+  web:
+    build: ./web  # Utilise le Dockerfile dans le dossier web
+    ports:
+      - "5000:5000"
+    environment:
+      # Variables d'environnement utilisées par web/app.py
+      POSTGRES_HOST: db
+      POSTGRES_DB: mydb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      REDIS_HOST: cache
+    # 6. Dépendances : attend que la DB et le cache soient prêts
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    # 10. Health check pour Flask
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # 2. Service PostgreSQL (db)
+  db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      # 5. Variables d'environnement PostgreSQL
+      POSTGRES_DB: mydb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    # 4. Volumes persistants pour PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # 10. Health check pour PostgreSQL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Service Redis (cache)
+  cache:
+    image: redis:6-alpine
+    restart: always
+    # 10. Health check pour Redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+# 4. Définition des volumes persistants
+volumes:
+  postgres_data:

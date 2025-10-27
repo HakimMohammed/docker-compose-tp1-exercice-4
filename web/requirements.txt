@@ -1,0 +1,4 @@
+Flask
+psycopg2-binary  # Driver pour PostgreSQL
+redis          # Client pour Redis
+dotenv         # Pour lire les variables d'environnement
